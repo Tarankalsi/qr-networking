@@ -1,0 +1,400 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id                     Int                      @id @default(autoincrement())
+  event_id               String?                  @unique(map: "ix_events_event_id") @db.Uuid
+  title                  String                   @db.VarChar(255)
+  description            String?
+  date                   DateTime                 @db.Timestamp(6)
+  location               String                   @db.VarChar(255)
+  image                  String?                  @db.VarChar(255)
+  type                   String                   @db.VarChar(50)
+  is_favorite            Boolean?
+  created_by             Int?
+  created_at             DateTime                 @db.Timestamptz(6)
+  updated_at             DateTime?                @db.Timestamptz(6)
+  is_deleted             Boolean
+  deleted_at             DateTime?                @db.Timestamptz(6)
+  provides_lunch         Boolean
+  provides_dinner        Boolean
+  provides_kit           Boolean
+  event_forms            event_forms[]
+  event_team_members     event_team_members[]
+  event_user_assignments event_user_assignments[]
+  visitors               EventVisitor[]
+  users                  users?                   @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exhibitorAuth          ExhibitorAuth[]
+  exhibitorProfiles      ExhibitorProfile[]
+  id_card_designs        id_card_designs[]
+  registrations          registrations[]
+
+  @@index([id], map: "ix_events_id")
+  @@map("events")
+}
+
+model ExhibitorAuth {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id      Int
+  password_hash String
+  is_active     Boolean           @default(true)
+  created_by    String?
+  last_login    DateTime?
+  created_at    DateTime          @default(now())
+  updated_at    DateTime          @default(now()) @updatedAt
+  email         String            @unique
+  event         Event             @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  profile       ExhibitorProfile?
+
+  @@map("exhibitor_auth")
+}
+
+model ExhibitorProfile {
+  id                   String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  auth_id              String                        @unique @db.Uuid
+  event_id             Int
+  company_name         String
+  profile_slug         String                        @unique
+  display_name         String
+  tagline              String?
+  description          String?
+  contact_person       String
+  contact_email        String
+  contact_phone        String?
+  website_url          String?
+  booth_number         String?
+  booth_location       String?
+  address              String?
+  logo_url             String?
+  banner_url           String?
+  linkedin_url         String?
+  twitter_url          String?
+  instagram_url        String?
+  facebook_url         String?
+  is_published         Boolean                       @default(false)
+  is_networking_active Boolean                       @default(true)
+  qr_code_url          String?
+  view_count           Int                           @default(0)
+  created_at           DateTime                      @default(now())
+  updated_at           DateTime                      @updatedAt
+  profile_image_url    String?
+  auth                 ExhibitorAuth                 @relation(fields: [auth_id], references: [id], onDelete: Cascade)
+  event                Event                         @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  profileViews         ProfileView[]
+  interactions         VisitorExhibitorInteraction[]
+
+  @@map("exhibitor_profiles")
+}
+
+model EventVisitor {
+  id            String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event_id      Int
+  name          String
+  email         String
+  phone         String?
+  company       String?
+  position      String?
+  session_id    String?                       @unique
+  consent_given Boolean                       @default(false)
+  consent_date  DateTime?
+  created_at    DateTime                      @default(now())
+  updated_at    DateTime                      @updatedAt
+  event         Event                         @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  profileViews  ProfileView[]
+  interactions  VisitorExhibitorInteraction[]
+
+  @@map("event_visitors")
+}
+
+model VisitorExhibitorInteraction {
+  id                String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitor_id        String           @db.Uuid
+  contact_saved     Boolean          @default(false)
+  interaction_count Int              @default(1)
+  last_interaction  DateTime         @default(now())
+  created_at        DateTime         @default(now())
+  profile_id        String           @db.Uuid
+  profile           ExhibitorProfile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  visitor           EventVisitor     @relation(fields: [visitor_id], references: [id], onDelete: Cascade)
+
+  @@unique([visitor_id, profile_id])
+  @@map("visitor_exhibitor_interactions")
+}
+
+model ProfileView {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profile_id String           @db.Uuid
+  visitor_id String?          @db.Uuid
+  ip_address String?
+  user_agent String?
+  referrer   String?
+  viewed_at  DateTime         @default(now())
+  profile    ExhibitorProfile @relation(fields: [profile_id], references: [id], onDelete: Cascade)
+  visitor    EventVisitor?    @relation(fields: [visitor_id], references: [id])
+
+  @@map("profile_views")
+}
+
+model event_forms {
+  id            Int             @id @default(autoincrement())
+  form_id       String?         @unique(map: "ix_event_forms_form_id") @db.Uuid
+  event_id      Int
+  title         String          @db.VarChar(255)
+  description   String?
+  form_type     formtype
+  attendee_type attendeetype
+  fields        Json            @db.Json
+  appearance    Json?           @db.Json
+  is_active     Boolean?
+  created_at    DateTime        @default(now()) @db.Timestamp(6)
+  updated_at    DateTime?       @db.Timestamp(6)
+  events        Event           @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  registrations registrations[]
+
+  @@index([id], map: "ix_event_forms_id")
+}
+
+model event_team_members {
+  id             Int       @id @default(autoincrement())
+  team_member_id String?   @unique(map: "ix_event_team_members_team_member_id") @db.Uuid
+  event_id       Int
+  name           String    @db.VarChar(100)
+  phone          String    @db.VarChar(20)
+  role           String    @db.VarChar(50)
+  created_at     DateTime  @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+  events         Event     @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([id], map: "ix_event_team_members_id")
+}
+
+model event_user_assignments {
+  id                                              Int       @id @default(autoincrement())
+  event_id                                        Int
+  user_id                                         Int
+  assigned_by                                     Int
+  role                                            String?   @db.VarChar
+  assigned_at                                     DateTime? @default(now()) @db.Timestamptz(6)
+  is_active                                       Boolean?
+  users_event_user_assignments_assigned_byTousers users     @relation("event_user_assignments_assigned_byTousers", fields: [assigned_by], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  events                                          Event     @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_event_user_assignments_user_idTousers     users     @relation("event_user_assignments_user_idTousers", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([id], map: "ix_event_user_assignments_id")
+}
+
+model id_card_designs {
+  id                   Int                 @id @default(autoincrement())
+  design_id            String?             @unique @db.Uuid
+  event_id             Int
+  name                 String              @db.VarChar(255)
+  description          String?
+  background_color     String?             @db.VarChar(50)
+  text_color           String?             @db.VarChar(50)
+  logo_position        String?             @db.VarChar(50)
+  logo_url             String?             @db.VarChar(255)
+  background_image_url String?             @db.VarChar(255)
+  show_qr_code         Boolean?
+  show_profile_photo   Boolean?
+  fields               Json                @db.Json
+  template             String?             @db.VarChar(50)
+  custom_html          String?
+  custom_dimensions    Json?               @db.Json
+  additional_info      Json?               @db.Json
+  is_active            Boolean?
+  is_default           Boolean?
+  created_at           DateTime?           @db.Timestamp(6)
+  updated_at           DateTime?           @db.Timestamp(6)
+  events               Event               @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id_card_instances    id_card_instances[]
+
+  @@index([id], map: "ix_id_card_designs_id")
+}
+
+model id_card_instances {
+  id              Int              @id @default(autoincrement())
+  instance_id     String?          @unique @db.Uuid
+  design_id       Int?
+  registration_id Int?
+  qr_code_data    String?
+  rendered_html   String?
+  created_at      DateTime?        @db.Timestamp(6)
+  updated_at      DateTime?        @db.Timestamp(6)
+  id_card_designs id_card_designs? @relation(fields: [design_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  registrations   registrations?   @relation(fields: [registration_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id], map: "ix_id_card_instances_id")
+}
+
+model registrations {
+  id                Int                 @id @default(autoincrement())
+  registration_id   String?             @unique(map: "ix_registrations_registration_id") @db.Uuid
+  event_id          Int
+  form_id           Int?
+  attendee_name     String              @db.VarChar(255)
+  attendee_email    String              @db.VarChar(255)
+  attendee_phone    String?             @db.VarChar(50)
+  registration_date DateTime            @default(now()) @db.Timestamp(6)
+  status            registrationstatus
+  form_data         Json?               @db.Json
+  created_at        DateTime            @default(now()) @db.Timestamp(6)
+  updated_at        DateTime?           @db.Timestamp(6)
+  confirmation_code String?             @unique(map: "ix_registrations_confirmation_code") @db.VarChar(50)
+  lunch_opted       Boolean?
+  dinner_opted      Boolean?
+  kit_opted         Boolean?
+  lunch_received    Boolean?
+  dinner_received   Boolean?
+  kit_received      Boolean?
+  check_in_notes    String?
+  check_in_time     DateTime?           @db.Timestamp(6)
+  id_card_instances id_card_instances[]
+  events            Event               @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  event_forms       event_forms?        @relation(fields: [form_id], references: [id], onUpdate: NoAction)
+
+  @@index([id], map: "ix_registrations_id")
+}
+
+model roles {
+  id          Int          @id @default(autoincrement())
+  name        String?      @unique(map: "ix_roles_name") @db.VarChar
+  description String?      @db.VarChar
+  is_default  Boolean?
+  permissions String?      @db.VarChar
+  user_roles  user_roles[] @ignore
+
+  @@index([id], map: "ix_roles_id")
+}
+
+model system_settings {
+  id                         String   @id @db.Uuid
+  site_name                  String   @db.VarChar(255)
+  site_description           String?
+  contact_email              String?  @db.VarChar(255)
+  support_email              String?  @db.VarChar(255)
+  default_timezone           String   @db.VarChar(50)
+  maintenance_mode           Boolean
+  primary_color              String   @db.VarChar(7)
+  secondary_color            String   @db.VarChar(7)
+  logo_url                   String?  @db.VarChar(512)
+  favicon_url                String?  @db.VarChar(512)
+  custom_css                 String?
+  smtp_host                  String?  @db.VarChar(255)
+  smtp_port                  Int
+  smtp_username              String?  @db.VarChar(255)
+  smtp_password              String?  @db.VarChar(255)
+  from_email                 String?  @db.VarChar(255)
+  from_name                  String?  @db.VarChar(255)
+  use_ssl                    Boolean
+  require_email_verification Boolean
+  enable_two_factor          Boolean
+  session_timeout            Int
+  max_login_attempts         Int
+  password_min_length        Int
+  enable_google_auth         Boolean
+  created_at                 DateTime @db.Timestamp(6)
+  updated_at                 DateTime @db.Timestamp(6)
+  updated_by                 String?  @db.Uuid
+  users                      users?   @relation(fields: [updated_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model token_blacklist {
+  token      String   @id
+  expires_at DateTime @db.Timestamp(6)
+  created_at DateTime @db.Timestamp(6)
+  reason     String?  @db.VarChar(255)
+
+  @@index([token], map: "ix_token_blacklist_token")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model user_roles {
+  user_id Int?
+  role_id Int?
+  roles   roles? @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users   users? @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@ignore
+}
+
+model user_settings {
+  id                   String   @id @db.Uuid
+  user_id              String   @unique @db.Uuid
+  email_notifications  Boolean
+  push_notifications   Boolean
+  event_reminders      Boolean
+  registration_updates Boolean
+  system_alerts        Boolean
+  theme                String   @db.VarChar(20)
+  language             String   @db.VarChar(10)
+  timezone             String   @db.VarChar(50)
+  date_format          String   @db.VarChar(20)
+  time_format          String   @db.VarChar(10)
+  created_at           DateTime @db.Timestamp(6)
+  updated_at           DateTime @db.Timestamp(6)
+  users                users    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model users {
+  id                                                               Int                      @id @default(autoincrement())
+  user_id                                                          String?                  @unique(map: "ix_users_user_id") @db.Uuid
+  email                                                            String                   @unique(map: "ix_users_email") @db.VarChar
+  full_name                                                        String                   @db.VarChar
+  phone                                                            String?                  @db.VarChar
+  bio                                                              String?
+  avatar                                                           String?                  @db.VarChar
+  hashed_password                                                  String?                  @db.VarChar
+  is_active                                                        Boolean?
+  is_superuser                                                     Boolean?
+  google_id                                                        String?                  @unique @db.VarChar
+  parent_user_id                                                   Int?
+  created_at                                                       DateTime?                @default(now()) @db.Timestamptz(6)
+  updated_at                                                       DateTime?                @db.Timestamptz(6)
+  event_user_assignments_event_user_assignments_assigned_byTousers event_user_assignments[] @relation("event_user_assignments_assigned_byTousers")
+  event_user_assignments_event_user_assignments_user_idTousers     event_user_assignments[] @relation("event_user_assignments_user_idTousers")
+  events                                                           Event[]
+  system_settings                                                  system_settings[]
+  user_roles                                                       user_roles[] @ignore
+  user_settings                                                    user_settings?
+  users                                                            users?                   @relation("usersTousers", fields: [parent_user_id], references: [id], onUpdate: NoAction)
+  other_users                                                      users[]                  @relation("usersTousers")
+
+  @@index([id], map: "ix_users_id")
+}
+
+model session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+}
+
+enum attendeetype {
+  attendees
+  speakers
+  nri
+  delegate
+}
+
+enum formtype {
+  feedback
+  registration
+  survey
+  contact
+  general
+}
+
+enum registrationstatus {
+  PENDING
+  CONFIRMED
+  CHECKED_IN
+  CANCELLED
+  REJECTED
+}

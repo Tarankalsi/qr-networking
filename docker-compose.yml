@@ -1,0 +1,23 @@
+networks:
+  microservices-network:
+    external: true
+
+services:
+  qr-exhibitor-networking:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-exhibitor-networking
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8001:8001"
+    networks:
+      - microservices-network
+
+
+
+
+
+
