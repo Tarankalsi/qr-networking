@@ -1,87 +1,82 @@
-# QR-Based Digital Business Card System
+# QR-Based Digital Business Card API
 
 ## 📝 Project Description
-A modern networking solution for events and exhibitions that replaces traditional paper business cards with **QR code technology**, enabling seamless digital contact exchange between exhibitors and visitors.
+This backend API powers a **QR-Based Digital Business Card System** for events and exhibitions. It enables exhibitors and visitors to exchange contacts seamlessly using QR codes, capture leads automatically, and manage profiles.
 
 ---
 
 ## 🎯 Problem Statement
-At large events with 150+ exhibitors, traditional networking is inefficient:
+Traditional networking at large events (150+ exhibitors) is inefficient:
 
 - Paper business cards get lost or forgotten
-- Visitors must repeatedly fill contact forms at each booth
-- Exhibitors struggle to organize and follow up with leads
-- Manual data entry is time-consuming and error-prone
+- Visitors fill contact forms repeatedly
+- Exhibitors struggle to track and follow up leads
+- Manual data entry is error-prone and slow
 
 ---
 
 ## 💡 Solution Overview
-The **Digital QR Business Card System** offers:
+The API provides endpoints to:
 
-- One-time visitor registration for the entire event
-- Instant contact exchange via QR code scanning
-- Automatic lead capture for exhibitor follow-up
-- Mobile-optimized experience for seamless networking
-
----
-
-## 🔄 How It Works
-
-### **For Exhibitors:**
-- Create a company profile with logo, contact info, products/services
-- System generates a **unique QR code** automatically
-- Print the QR code on booth banners/materials
-- Access a dashboard to view visitor leads and analytics
-
-### **For Visitors:**
-- Scan any exhibitor QR code with a phone camera
-- Register once with basic contact information
-- Browse exhibitor profile (company details, products, contact info)
-- Click **"Save Contact"** → Exhibitor's **vCard** downloads to phone
-- Scan other QR codes → Automatically logged in, no re-registration
-
-### **Behind the Scenes:**
-- Visitor's contact details automatically shared with the exhibitor
-- All interactions tracked for analytics
-- Session-based authentication for a smooth multi-booth experience
+- Manage exhibitor profiles
+- Generate and serve QR codes
+- Register and manage visitors
+- Track lead capture and interactions
+- Save Contact Details
+- Authenticate sessions securely
 
 ---
 
 ## 🚀 Key Features
-- **Smart QR Generation** – Unique codes for each exhibitor profile
-- **One Registration, Unlimited Access** – Register once, network everywhere
-- **Dual Contact Exchange** – Visitor gets vCard, exhibitor gets lead data
-- **Mobile-First Design** – Optimized for QR scanning on smartphones
-- **Real-time Analytics** – Track engagement and leads
-- **Professional Profiles** – Exhibitor pages with logos, descriptions, and products
-- **Secure Session Management** – Seamless authentication across QR scans
-
----
-
-## 🎨 User Experience
-- **Exhibitor Dashboard:** Manage profile, download QR codes, view leads
-- **Visitor Journey:** Effortless mobile experience – scan, register, save contact
-- **Contact Exchange:** Professional vCard download for easy phone integration
+- **Smart QR Generation** – Unique QR codes for each exhibitor
+- **Visitor Registration** – One-time registration per event
+- **Lead Capture** – Automatic visitor info collection
+- **Exchange Contacts** – Exchange Contact Details
+- **Real-time Analytics** – Track visitor interactions
+- **Secure Authentication** – Session and token-based authentication
 
 ---
 
 ## 🛠️ Technical Highlights
-- **Architecture:** Full-stack web application (React + Node.js + MySQL)
-- **API:** RESTful API with authentication
-- **File Storage:** Cloud storage for logos and QR codes
-- **UI:** Mobile-responsive, touch-friendly design
-- **Session Handling:** Persistent sessions across QR scans
-- **Security:** Input validation, secure session tokens
+- **Backend:** Node.js + Express
+- **Database:** PostgreSql
+- **File Storage:** S3 Cloud storage for logos and QR codes
+- **API:** RESTful endpoints with authentication
+- **Security:** Input validation, secure session handling
+- **Scalability:** Supports multi-booth events
+
+
 
 ---
 
-## 📊 Business Impact
-- **Faster Networking** – Eliminate manual forms
-- **Higher Lead Quality** – Automatic data capture reduces errors
-- **Better Follow-up** – Organized lead management for exhibitors
-- **Enhanced Experience** – Professional impression for events
-- **Data Analytics** – Insights into visitor engagement
+## ⚡ API Endpoints Overview
 
----
+### **Admin / Event Organizer**
+| Method | URL | Description |
+|--------|-----|-------------|
+| POST   | `/admin/exhibitor/create-exhibitor` | Register an exhibitor |
+| GET    | `/admin/exhibitor/:eventId` | Get all exhibitors for an event |
+| PATCH  | `/admin/exhibitor/:exhibitorId/toggle-status` | Activate/deactivate exhibitor |
+| GET    | `/admin/exhibitor/:exhibitorId/resend-credentials` | Resend login credentials to exhibitor |
+
+### **Exhibitor**
+| Method | URL | Description |
+|--------|-----|-------------|
+| POST   | `/auth/login` | Exhibitor login |
+| GET    | `/auth/qr-analytics` | Get QR scan analytics |
+| PUT    | `/profile/upload` | Update exhibitor profile |
+| PATCH  | `/profile/publish` | Publish/unpublish profile |
+| PATCH  | `/profile/toggle-networking` | Enable/disable networking |
+| GET    | `/profile/analytics` | Profile interaction analytics |
+| GET    | `/public/profile/:slug` | Fetch exhibitor profile by slug |
+| POST   | `/auth/refresh-token` | Refresh JWT token |
+
+### **Visitor**
+| Method | URL | Description |
+|--------|-----|-------------|
+| POST   | `/visitor/register` | Register visitor |
+| POST   | `/visitor/session/check` | Check visitor session |
+| POST   | `/visitor/profile/:slug/save-contact` | Save exhibitor contact (vCard) |
+| POST   | `/visitor/profile/:slug/interaction` | Get visitor interaction status |
 
 ## 📂 Project Structure
