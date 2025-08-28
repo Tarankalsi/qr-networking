@@ -79,4 +79,3 @@ The API provides endpoints to:
 | POST   | `/visitor/profile/:slug/save-contact` | Save exhibitor contact (vCard) |
 | POST   | `/visitor/profile/:slug/interaction` | Get visitor interaction status |
 
-## 📂 Project Structure
